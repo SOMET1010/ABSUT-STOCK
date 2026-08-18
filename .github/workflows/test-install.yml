@@ -24,5 +24,5 @@ jobs:
           odoo -d test_ansut --db_host=postgres --db_user=odoo --db_password=odoo \
             --data-dir="$GITHUB_WORKSPACE/.odoo-data" \
             --addons-path=/usr/lib/python3/dist-packages/odoo/addons,$GITHUB_WORKSPACE \
-            -i ansut_equipment \
+            -i ansut_theme,ansut_equipment \
             --stop-after-init --without-demo=all --log-level=warn

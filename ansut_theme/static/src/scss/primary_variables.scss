@@ -1,0 +1,24 @@
+// Surcharge des variables primaires d'Odoo par la charte ANSUT (DSD §5, §7).
+// Chargé avant Bootstrap : c'est ce qui reteinte l'ossature du Web Client.
+
+$o-brand-primary: #1A4A94;
+$o-brand-odoo: #1A4A94;
+$o-brand-secondary: #F38B2A;
+
+$primary: #1A4A94;
+$secondary: #F38B2A;
+$success: #2E9E5B;
+$warning: #F38B2A;
+$danger: #E0483C;
+$info: #2B7FD4;
+
+$body-bg: #F5F7FA;
+$body-color: #1A2233;
+$border-color: #E5E9F0;
+
+$border-radius: 8px;
+$border-radius-sm: 4px;
+$border-radius-lg: 12px;
+
+$font-family-sans-serif: 'Lato', 'Montserrat', -apple-system, BlinkMacSystemFont,
+                         'Segoe UI', Roboto, sans-serif;

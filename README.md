@@ -12,7 +12,7 @@ unitaire, multi-sites, distribution contrôlée aux bénéficiaires, SAV, API.
 | --- | --- | --- |
 | `ansut_equipment` | Référentiel équipement unitaire (DSD §11–§14, §23, §33) | **Livré** |
 | `ansut_core` | Socle commun, séquences, constantes | À faire |
-| `ansut_theme` | Design System ANSUT (§5–§8, §62) | À faire |
+| `ansut_theme` | Design System ANSUT (§5–§8, §62) | **Livré** |
 | `ansut_dashboard` | Tableaux de bord OWL (§10) | À faire |
 | `ansut_beneficiary` | Bénéficiaires (§22) | À faire |
 | `ansut_distribution` | Distribution, QR et PIN (§19–§24) | À faire |
@@ -36,11 +36,24 @@ sérialisation en standard Odoo avec extension.
   RG-003 (pas d'attribution sans bénéficiaire), cohérence des dates de
   garantie.
 
+## Ce que couvre `ansut_theme`
+
+Jetons du §62 centralisés dans `tokens.scss` : couleurs institutionnelles du
+§5, couleurs fonctionnelles du §6 tenues volontairement secondaires, rayons,
+ombres, espacements et typographie du §7. Aucun composant ne redéfinit ses
+couleurs — c'est la règle posée par le §62.
+
+Les variables primaires surchargent Bootstrap avant son chargement, ce qui
+reteinte l'ossature du Web Client : barre supérieure, surfaces, boutons,
+badges d'état, onglets, et un focus visible conforme au §63.
+
+Les valeurs sont dérivées des maquettes de référence validées.
+
 ## Démarrer une instance locale
 
 ```bash
 docker compose up -d
-docker compose run --rm odoo odoo -d ansut -i ansut_equipment --stop-after-init
+docker compose run --rm odoo odoo -d ansut -i ansut_theme,ansut_equipment --stop-after-init
 ```
 
 Puis <http://localhost:8069>, avec `admin` / `admin`.

@@ -1,0 +1,53 @@
+// Jetons du Design System ANSUT (DSD §62).
+//
+// Source unique de vérité : aucun composant ne redéfinit ses couleurs.
+// Valeurs dérivées des maquettes de référence validées.
+
+:root {
+    // --- Couleurs institutionnelles (§5) ---------------------------------
+    --ansut-primary: #1A4A94;          // bleu ANSUT
+    --ansut-primary-dark: #0F3268;     // dégradés, aplats profonds
+    --ansut-primary-light: #2B7FD4;    // liens, états survolés
+    --ansut-primary-soft: #E8EFF9;     // fonds de sélection
+    --ansut-secondary: #F38B2A;        // orange ANSUT
+    --ansut-secondary-soft: #FDF0E3;
+
+    // --- Couleurs fonctionnelles (§6) ------------------------------------
+    // Volontairement secondaires par rapport au bleu et à l'orange.
+    --ansut-success: #2E9E5B;
+    --ansut-success-soft: #E6F4EC;
+    --ansut-warning: #F38B2A;
+    --ansut-warning-soft: #FDF0E3;
+    --ansut-danger: #E0483C;
+    --ansut-danger-soft: #FCEAE8;
+    --ansut-info: #2B7FD4;
+    --ansut-info-soft: #E8F1FB;
+    --ansut-neutral: #6B7A90;
+    --ansut-neutral-soft: #F0F2F5;
+
+    // --- Surfaces et texte -------------------------------------------------
+    --ansut-bg: #F5F7FA;
+    --ansut-surface: #FFFFFF;
+    --ansut-border: #E5E9F0;
+    --ansut-text: #1A2233;
+    --ansut-text-muted: #6B7A90;
+
+    // --- Rayons (§62) ------------------------------------------------------
+    --ansut-radius-sm: 4px;
+    --ansut-radius-md: 8px;
+    --ansut-radius-lg: 12px;
+
+    // --- Ombres (§62) ------------------------------------------------------
+    --ansut-shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+    --ansut-shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+
+    // --- Espacements (§62) -------------------------------------------------
+    --ansut-spacing-xs: 4px;
+    --ansut-spacing-sm: 8px;
+    --ansut-spacing-md: 16px;
+    --ansut-spacing-lg: 24px;
+
+    // --- Typographie (§7) --------------------------------------------------
+    --ansut-font: 'Lato', 'Montserrat', -apple-system, BlinkMacSystemFont,
+                  'Segoe UI', Roboto, sans-serif;
+}

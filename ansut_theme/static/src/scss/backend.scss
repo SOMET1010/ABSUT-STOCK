@@ -1,0 +1,82 @@
+// Habillage du Web Client aux couleurs ANSUT (DSD §9, §78).
+//
+// L'objectif du §78 : l'utilisateur doit reconnaître une application ANSUT,
+// pas un Odoo repeint. On agit sur l'ossature — barre supérieure, navigation,
+// surfaces, états — sans toucher au comportement du client web.
+
+.o_web_client {
+    font-family: var(--ansut-font);
+    color: var(--ansut-text);
+}
+
+// --- Barre supérieure (§9) -------------------------------------------------
+.o_main_navbar {
+    background-color: var(--ansut-primary);
+    border-bottom: none;
+    box-shadow: var(--ansut-shadow-sm);
+
+    .o_menu_brand {
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+}
+
+// --- Surfaces --------------------------------------------------------------
+.o_content,
+.o_action_manager {
+    background-color: var(--ansut-bg);
+}
+
+.o_form_view .o_form_sheet,
+.o_list_view,
+.o_kanban_record {
+    background-color: var(--ansut-surface);
+    border: 1px solid var(--ansut-border);
+    border-radius: var(--ansut-radius-md);
+    box-shadow: var(--ansut-shadow-sm);
+}
+
+// --- Boutons ---------------------------------------------------------------
+.btn-primary {
+    background-color: var(--ansut-primary);
+    border-color: var(--ansut-primary);
+    border-radius: var(--ansut-radius-md);
+
+    &:hover,
+    &:focus {
+        background-color: var(--ansut-primary-dark);
+        border-color: var(--ansut-primary-dark);
+    }
+}
+
+.btn-secondary {
+    background-color: var(--ansut-secondary);
+    border-color: var(--ansut-secondary);
+    border-radius: var(--ansut-radius-md);
+}
+
+// --- Badges d'état ---------------------------------------------------------
+// Le cycle de vie du §14 s'appuie sur ces teintes fonctionnelles (§6).
+.o_field_badge,
+.badge {
+    border-radius: 999px;
+    font-weight: 600;
+    padding: 0.25em 0.75em;
+}
+
+// --- Onglets (§13, §51) ----------------------------------------------------
+.o_notebook .nav-tabs {
+    border-bottom: 1px solid var(--ansut-border);
+
+    .nav-link.active {
+        color: var(--ansut-primary);
+        border-bottom: 2px solid var(--ansut-primary);
+        background: transparent;
+    }
+}
+
+// --- Accessibilité : focus visible (§63, WCAG 2.1 AA) ----------------------
+:focus-visible {
+    outline: 2px solid var(--ansut-primary-light);
+    outline-offset: 2px;
+}
