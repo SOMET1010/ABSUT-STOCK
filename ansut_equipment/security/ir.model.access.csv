@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ansut_equipment_marking_user,ansut.equipment.marking utilisateur,model_ansut_equipment_marking,stock.group_stock_user,1,0,0,0
+access_ansut_equipment_marking_manager,ansut.equipment.marking responsable,model_ansut_equipment_marking,stock.group_stock_manager,1,1,1,1

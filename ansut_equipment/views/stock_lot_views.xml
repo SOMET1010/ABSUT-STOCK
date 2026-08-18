@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="seq_ansut_equipment_uid" model="ir.sequence">
+        <field name="name">Identifiant équipement ANSUT</field>
+        <field name="code">ansut.equipment.uid</field>
+        <field name="prefix">ANSUT-EQ-</field>
+        <field name="padding">6</field>
+    </record>
+
+    <record id="ansut_equipment_view_form" model="ir.ui.view">
+        <field name="name">stock.lot.form.ansut</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Équipement ANSUT">
+                    <group>
+                        <field name="equipment_uid"/>
+                        <field name="imei"/>
+                        <field name="manufacturer_reference"/>
+                        <field name="asset_number"/>
+                        <field name="marking_type_id"/>
+                    </group>
+                    <group>
+                        <field name="lifecycle_state"/>
+                        <field name="beneficiary_id"/>
+                        <field name="current_site_id"/>
+                        <field name="current_location_id"/>
+                    </group>
+                </group>
+                <group string="Garantie">
+                    <group>
+                        <field name="acquisition_date"/>
+                        <field name="commissioning_date"/>
+                    </group>
+                    <group>
+                        <field name="warranty_start"/>
+                        <field name="warranty_end"/>
+                        <field name="warranty_active"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="ansut_equipment_view_tree" model="ir.ui.view">
+        <field name="name">stock.lot.tree.ansut</field>
+        <field name="model">stock.lot</field>
+        <field name="arch" type="xml">
+            <tree string="Équipements ANSUT" sample="1">
+                <field name="equipment_uid"/>
+                <field name="name" string="Numéro de série"/>
+                <field name="product_id"/>
+                <field name="imei" optional="show"/>
+                <field name="lifecycle_state" widget="badge"/>
+                <field name="beneficiary_id" optional="show"/>
+                <field name="current_site_id" optional="show"/>
+                <field name="warranty_active" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="ansut_equipment_view_search" model="ir.ui.view">
+        <field name="name">stock.lot.search.ansut</field>
+        <field name="model">stock.lot</field>
+        <field name="arch" type="xml">
+            <search string="Équipements ANSUT">
+                <field name="equipment_uid"/>
+                <field name="name" string="Numéro de série"/>
+                <field name="imei"/>
+                <field name="beneficiary_id"/>
+                <filter name="en_stock" string="En stock" domain="[('lifecycle_state','=','in_stock')]"/>
+                <filter name="sav" string="En SAV" domain="[('lifecycle_state','=','after_sales')]"/>
+                <filter name="garantie" string="Sous garantie" domain="[('warranty_active','=',True)]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter name="group_state" string="Cycle de vie" context="{'group_by': 'lifecycle_state'}"/>
+                    <filter name="group_site" string="Site" context="{'group_by': 'current_site_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_ansut_equipment" model="ir.actions.act_window">
+        <field name="name">Équipements ANSUT</field>
+        <field name="res_model">stock.lot</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="ansut_equipment_view_search"/>
+    </record>
+
+    <menuitem id="menu_ansut_equipment_root" name="ANSUT" sequence="5"/>
+    <menuitem id="menu_ansut_equipment" name="Équipements"
+              parent="menu_ansut_equipment_root" action="action_ansut_equipment" sequence="10"/>
+
+</odoo>
