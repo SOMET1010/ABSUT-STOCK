@@ -15,7 +15,7 @@ unitaire, multi-sites, distribution contrôlée aux bénéficiaires, SAV, API.
 | `ansut_theme` | Design System ANSUT (§5–§8, §62) | **Livré** |
 | `ansut_dashboard` | Tableaux de bord OWL (§10) | À faire |
 | `ansut_beneficiary` | Bénéficiaires (§22) | À faire |
-| `ansut_distribution` | Distribution, QR et PIN (§19–§24) | À faire |
+| `ansut_distribution` | Distribution, QR et PIN (§19–§29) | **Livré** |
 | `ansut_withdrawal` | Point de retrait, remise, PV (§25–§29) | À faire |
 | `ansut_sav` | SAV, garantie, échange standard (§30–§34) | À faire |
 | `ansut_api` · `ansut_webhook` | API versionnée et webhooks (§38–§41) | À faire |

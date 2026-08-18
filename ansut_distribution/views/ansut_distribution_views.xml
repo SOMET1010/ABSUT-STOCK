@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="seq_ansut_distribution" model="ir.sequence">
+        <field name="name">Distribution ANSUT</field>
+        <field name="code">ansut.distribution</field>
+        <field name="prefix">RET-%(year)s-</field>
+        <field name="padding">5</field>
+    </record>
+
+    <record id="ansut_distribution_view_form" model="ir.ui.view">
+        <field name="name">ansut.distribution.form</field>
+        <field name="model">ansut.distribution</field>
+        <field name="arch" type="xml">
+            <form string="Distribution">
+                <header>
+                    <button name="action_issue_secrets" type="object" string="Générer QR et PIN"
+                            class="btn-primary" invisible="state not in ('validated','reserved')"/>
+                    <button name="action_deliver" type="object" string="Valider la remise"
+                            class="btn-primary" invisible="state != 'checking'"/>
+                    <button name="action_revoke_secrets" type="object" string="Révoquer QR et PIN"
+                            invisible="state in ('draft','closed','cancelled')"/>
+                    <button name="action_cancel" type="object" string="Annuler"
+                            invisible="state in ('closed','cancelled')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,reserved,available,checking,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="reference" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Bénéficiaire">
+                            <field name="beneficiary_id"/>
+                            <field name="identity_document_type"/>
+                            <field name="identity_document_number"/>
+                        </group>
+                        <group string="Équipement">
+                            <field name="equipment_id"/>
+                            <field name="warehouse_id"/>
+                            <field name="pickup_point_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Retrait">
+                            <field name="reservation_date"/>
+                            <field name="expiration_date"/>
+                            <field name="withdrawal_date"/>
+                            <field name="agent_id"/>
+                        </group>
+                        <group string="Sécurité">
+                            <field name="pin_attempts"/>
+                            <field name="pin_blocked"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Preuves de remise" name="proofs">
+                            <group>
+                                <field name="delivery_photo" widget="image"/>
+                                <field name="delivery_signature" widget="image"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="ansut_distribution_view_tree" model="ir.ui.view">
+        <field name="name">ansut.distribution.tree</field>
+        <field name="model">ansut.distribution</field>
+        <field name="arch" type="xml">
+            <tree string="Distributions et retraits" sample="1">
+                <field name="reference"/>
+                <field name="beneficiary_id"/>
+                <field name="equipment_id"/>
+                <field name="pickup_point_id" optional="show"/>
+                <field name="reservation_date" optional="show"/>
+                <field name="expiration_date" optional="hide"/>
+                <field name="state" widget="badge"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="ansut_distribution_view_search" model="ir.ui.view">
+        <field name="name">ansut.distribution.search</field>
+        <field name="model">ansut.distribution</field>
+        <field name="arch" type="xml">
+            <search string="Distributions">
+                <field name="reference"/>
+                <field name="beneficiary_id"/>
+                <field name="equipment_id"/>
+                <filter name="a_retirer" string="Disponibles au retrait"
+                        domain="[('state','=','available')]"/>
+                <filter name="en_attente" string="Retraits en attente"
+                        domain="[('state','in',['secrets_issued','notified','in_transit','available'])]"/>
+                <filter name="bloques" string="PIN bloqué" domain="[('pin_blocked','=',True)]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter name="group_state" string="État" context="{'group_by': 'state'}"/>
+                    <filter name="group_point" string="Point de retrait"
+                            context="{'group_by': 'pickup_point_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_ansut_distribution" model="ir.actions.act_window">
+        <field name="name">Distributions &amp; Retraits</field>
+        <field name="res_model">ansut.distribution</field>
+        <field name="view_mode">tree,form</field>
+        <field name="search_view_id" ref="ansut_distribution_view_search"/>
+    </record>
+
+    <menuitem id="menu_ansut_distribution" name="Distributions &amp; Retraits"
+              parent="ansut_equipment.menu_ansut_equipment_root"
+              action="action_ansut_distribution" sequence="20"/>
+
+</odoo>
