@@ -17,7 +17,7 @@ unitaire, multi-sites, distribution contrôlée aux bénéficiaires, SAV, API.
 | `ansut_beneficiary` | Bénéficiaires (§22) | **Livré** |
 | `ansut_distribution` | Distribution, QR et PIN (§19–§29) | **Livré** |
 | `ansut_withdrawal` | Point de retrait, remise, PV (§25–§29) | **Livré** |
-| `ansut_sav` | SAV, garantie, échange standard (§30–§34) | À faire |
+| `ansut_sav` | SAV, garantie, échange standard (§30–§34) | **Livré** |
 | `ansut_api` · `ansut_webhook` | API versionnée et webhooks (§38–§41) | À faire |
 | `ansut_audit` · `ansut_reporting` | Journal d'audit et reporting (§45–§48) | À faire |
 
@@ -115,6 +115,33 @@ scanner le QR, saisir le PIN, contrôler l'identité, remettre l'équipement.
   équipements avec IMEI et garantie, photo, signatures. Il ne s'édite qu'après
   la remise effective.
 
+## Ce que couvre `ansut_sav`
+
+Le module le plus mince du lot, et c'est voulu : Odoo Enterprise fait presque
+tout. `helpdesk_stock` donne déjà au ticket le numéro de série, les produits
+réellement livrés au demandeur et les bons de retour ; `helpdesk_repair` le
+lien vers les ordres de réparation ; `repair` (communautaire) les ordres
+eux-mêmes, pièces et mouvements de stock compris. Rien de cela n'est réécrit.
+
+Ce que le standard ne sait pas, et qui est ajouté :
+
+- **la garantie au moment du ticket** — `repair.order` a bien un indicateur
+  `under_warranty`, mais il faut le cocher à la main. Il est désormais déduit
+  de la garantie de l'équipement, tout en restant modifiable : un geste
+  commercial hors garantie doit rester possible ;
+- **la cohérence demandeur / détenteur** : un ticket ouvert par quelqu'un
+  d'autre que le détenteur enregistré est signalé avant toute prise en charge ;
+- **la répercussion sur l'état de l'équipement** : ouvrir un ticket le place en
+  SAV, démarrer une réparation le passe en réparation, la terminer le remet en
+  service — sans jamais écraser un état plus grave, un équipement déclaré perdu
+  ne redevenant pas « en SAV » ;
+- **l'échange standard du §34** : le bénéficiaire repart avec un équipement de
+  remplacement pendant que le sien part en SAV. Le remplacement n'est pas une
+  livraison ordinaire — il suit la même procédure sécurisée que la remise
+  initiale, QR et PIN compris, parce que c'est le même geste au même comptoir.
+  RG-009 s'y applique : un bénéficiaire suspendu ne repart pas avec du
+  matériel.
+
 ## Démarrer une instance locale
 
 ```bash
@@ -139,13 +166,15 @@ Docker étant hors d'atteinte derrière la politique réseau).
 
 | | Communautaire | Communautaire + Enterprise |
 |---|---|---|
-| Installation des 4 modules | ✅ | ✅ |
+| Installation | 4 modules ✅ | 5 modules ✅ |
 | Tests `ansut_beneficiary` | 11 ✅ | 11 ✅ |
 | Tests `ansut_withdrawal` | 18 ✅ | 18 ✅ |
+| Tests `ansut_sav` | — (exige Helpdesk) | 15 ✅ |
 
-La pile Enterprise testée comprend `helpdesk`, `stock_barcode` et
-`web_enterprise` installés aux côtés des modules ANSUT : aucun conflit, aucune
-erreur.
+La pile Enterprise testée comprend `helpdesk`, `helpdesk_stock`,
+`helpdesk_repair`, `stock_barcode` et `web_enterprise` installés aux côtés des
+modules ANSUT : aucun conflit, aucune erreur. `ansut_sav` est le seul module du
+lot qui exige Enterprise — les quatre autres tournent en communautaire.
 
 ## Une contrainte à connaître
 

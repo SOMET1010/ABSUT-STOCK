@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="repair_order_view_form_ansut" model="ir.ui.view">
+        <field name="name">repair.order.form.ansut</field>
+        <field name="model">repair.order</field>
+        <field name="inherit_id" ref="repair.view_repair_order_form"/>
+        <field name="arch" type="xml">
+            <field name="under_warranty" position="after">
+                <field name="is_ansut_equipment" invisible="1"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

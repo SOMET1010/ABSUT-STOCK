@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="helpdesk_ticket_view_form_ansut" model="ir.ui.view">
+        <field name="name">helpdesk.ticket.form.ansut.sav</field>
+        <field name="model">helpdesk.ticket</field>
+        <field name="inherit_id" ref="helpdesk.helpdesk_ticket_view_form"/>
+        <field name="arch" type="xml">
+
+            <header position="inside">
+                <field name="is_ansut_equipment" invisible="1"/>
+                <button name="action_ansut_standard_exchange" type="object"
+                        string="Échange standard" class="btn-primary"
+                        invisible="not is_ansut_equipment"/>
+                <button name="action_ansut_return_to_service" type="object"
+                        string="Remettre en service"
+                        invisible="not is_ansut_equipment"/>
+                <button name="action_ansut_declare_out_of_order" type="object"
+                        string="Déclarer hors service"
+                        invisible="not is_ansut_equipment"/>
+                <button name="action_ansut_declare_lost" type="object"
+                        string="Déclarer perdu"
+                        invisible="not is_ansut_equipment"/>
+            </header>
+
+            <xpath expr="//sheet" position="inside">
+                <field name="beneficiary_mismatch" invisible="1"/>
+                <field name="equipment_warranty_active" invisible="1"/>
+                <div class="alert alert-warning" role="alert"
+                     invisible="not beneficiary_mismatch">
+                    Le demandeur n'est pas le détenteur enregistré
+                    (<field name="equipment_beneficiary_id" readonly="1" nolabel="1"
+                            class="oe_inline"/>). À vérifier avant toute prise en charge.
+                </div>
+                <div class="alert alert-danger" role="alert"
+                     invisible="not is_ansut_equipment or equipment_warranty_active">
+                    Équipement <strong>hors garantie</strong>
+                    (échue le <field name="equipment_warranty_end" readonly="1" nolabel="1"
+                                     class="oe_inline"/>).
+                    Toute réparation est facturable.
+                </div>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Équipement ANSUT" name="ansut_equipment"
+                      invisible="not is_ansut_equipment">
+                    <group>
+                        <group>
+                            <field name="equipment_uid"/>
+                            <field name="equipment_condition"/>
+                        </group>
+                        <group>
+                            <field name="equipment_warranty_end"/>
+                            <field name="equipment_beneficiary_id"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="helpdesk_ticket_view_search_ansut" model="ir.ui.view">
+        <field name="name">helpdesk.ticket.search.ansut.sav</field>
+        <field name="model">helpdesk.ticket</field>
+        <field name="inherit_id" ref="helpdesk.helpdesk_tickets_view_search"/>
+        <field name="arch" type="xml">
+            <search position="inside">
+                <field name="equipment_uid" string="Identifiant ANSUT"/>
+                <separator/>
+                <filter name="ansut_equipment" string="Équipements ANSUT"
+                        domain="[('is_ansut_equipment', '=', True)]"/>
+                <filter name="ansut_out_of_warranty" string="Hors garantie"
+                        domain="[('is_ansut_equipment', '=', True),
+                                 ('equipment_warranty_active', '=', False)]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter name="group_ansut_warranty" string="Garantie"
+                            context="{'group_by': 'equipment_warranty_active'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

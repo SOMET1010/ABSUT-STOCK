@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="ansut_exchange_wizard_view_form" model="ir.ui.view">
+        <field name="name">ansut.exchange.wizard.form</field>
+        <field name="model">ansut.exchange.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Échange standard">
+                <field name="product_id" invisible="1"/>
+                <group>
+                    <group string="Équipement défaillant">
+                        <field name="ticket_id"/>
+                        <field name="faulty_lot_id"/>
+                        <field name="beneficiary_id"/>
+                        <field name="warranty_active"/>
+                    </group>
+                    <group string="Remplacement">
+                        <field name="replacement_lot_id"/>
+                        <field name="picking_type_id"/>
+                        <field name="faulty_condition"/>
+                    </group>
+                </group>
+                <div class="alert alert-info" role="alert">
+                    Le remplacement suit la procédure de retrait sécurisée : un QR
+                    et un PIN sont générés, et le bénéficiaire devra les présenter
+                    au comptoir comme pour une première remise.
+                </div>
+                <footer>
+                    <button name="action_exchange" type="object" string="Créer l'échange"
+                            class="btn-primary"/>
+                    <button string="Annuler" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>
