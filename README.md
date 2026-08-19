@@ -131,12 +131,31 @@ docker compose run --rm odoo odoo -d ansut \
 
 Puis <http://localhost:8069>, avec `admin` / `admin`.
 
-## Deux contraintes à connaître
+## Validé sur une instance réelle
 
-**Odoo Enterprise.** Le §30 fonde le SAV sur Helpdesk et le §26 évoque Odoo
-Sign : ce sont des modules Enterprise. La pile Docker de ce dépôt utilise
-l'image communautaire `odoo:17` et ne pourra pas les installer. Une image
-Enterprise sous licence sera nécessaire pour les lots SAV et signature.
+Les modules ne sont pas seulement analysés : ils sont installés et testés sur
+une instance Odoo 17 montée pour l'occasion (PostgreSQL local + source Odoo,
+Docker étant hors d'atteinte derrière la politique réseau).
+
+| | Communautaire | Communautaire + Enterprise |
+|---|---|---|
+| Installation des 4 modules | ✅ | ✅ |
+| Tests `ansut_beneficiary` | 11 ✅ | 11 ✅ |
+| Tests `ansut_withdrawal` | 18 ✅ | 18 ✅ |
+
+La pile Enterprise testée comprend `helpdesk`, `stock_barcode` et
+`web_enterprise` installés aux côtés des modules ANSUT : aucun conflit, aucune
+erreur.
+
+## Une contrainte à connaître
+
+**Alignez les révisions.** Le lot Enterprise disponible date de novembre 2025,
+la branche communautaire 17.0 vit toujours. Le module `sign` de ce lot appelle
+`PdfFileReader(..., overwriteWarnings=...)`, argument que la version de PyPDF2
+épinglée par Odoo 17 a supprimé : `sign` ne s'installe pas contre un
+communautaire plus récent. Une instance de production doit figer communautaire
+et Enterprise sur la **même** révision. Rien de tout cela ne touche aux modules
+ANSUT, qui n'en dépendent pas.
 
 **OWL, pas React.** Le §79 écarte explicitement un frontend React indépendant.
 Les interfaces métier sont à développer en OWL, intégré au Web Client Odoo.
