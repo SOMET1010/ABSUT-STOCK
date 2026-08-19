@@ -61,7 +61,7 @@
                             <field name="equipment_uid"/>
                             <field name="name"/>
                             <field name="imei"/>
-                            <field name="lifecycle_state"/>
+                            <field name="ansut_condition"/>
                             <field name="warranty_end"/>
                         </tree>
                     </field>

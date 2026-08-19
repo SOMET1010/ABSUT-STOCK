@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 """Référentiel équipement unitaire ANSUT (DSD §11 à §14, §33).
 
-L'équipement individuel reste un `stock.lot` sérialisé : on étend le modèle
-standard plutôt que d'en créer un parallèle, conformément à la matrice §74
-qui classe « Séries » en standard Odoo avec extension.
+L'équipement individuel est un `stock.lot` sérialisé. On n'ajoute que ce
+qu'Odoo ne sait pas dire de lui-même :
+
+- Odoo connaît déjà **où** est l'équipement (`location_id`, `quant_ids`), **à
+  qui** il a été livré (`last_delivery_partner_id`, `delivery_ids`) et **son
+  numéro de série** (`name`). Rien de tout cela n'est redoublé ici.
+- Odoo ne connaît pas l'identifiant ANSUT, l'IMEI, le marquage physique, la
+  garantie, ni l'état d'un équipement sorti du circuit logistique (SAV, perdu,
+  hors service). C'est l'objet de ce module.
 """
 import secrets
 
@@ -32,38 +38,37 @@ class StockLot(models.Model):
     _inherit = 'stock.lot'
 
     # --- Identification (§12, RG-001) ---------------------------------------
+    # `name` porte déjà le numéro de série : on n'en fait pas une copie.
     equipment_uid = fields.Char(
         string="Identifiant ANSUT", copy=False, index=True, readonly=True,
         help="Identifiant unique ANSUT, attribué automatiquement à la création.")
-    serial_number = fields.Char(
-        string="Numéro de série", related='name', store=True, readonly=False)
     imei = fields.Char(string="IMEI", copy=False, index=True)
     manufacturer_reference = fields.Char(string="Référence constructeur")
     asset_number = fields.Char(string="Numéro d'immobilisation", copy=False)
+    marking_type_id = fields.Many2one('ansut.equipment.marking', string="Type de marquage")
 
-    # --- Retrait sécurisé (§23) ---------------------------------------------
-    qr_token = fields.Char(
-        string="Jeton QR", copy=False, readonly=True, groups='stock.group_stock_manager',
-        help="Jeton opaque du QR code. N'expose aucune donnée personnelle.")
-
-    # --- Cycle de vie (§14) --------------------------------------------------
-    lifecycle_state = fields.Selection(
+    # --- État hors circuit logistique (§14, §30 à §33) -----------------------
+    # La position de l'équipement (en stock, réservé, en transit, livré) est
+    # celle qu'Odoo calcule : elle n'est pas recopiée dans un champ maison qui
+    # dériverait au premier mouvement fait hors de nos écrans. Ne subsistent
+    # que les états qu'aucun mouvement de stock n'exprime.
+    ansut_condition = fields.Selection(
         selection=[
-            ('new', "Nouveau"),
-            ('received', "Reçu"),
-            ('in_stock', "En stock"),
-            ('reserved', "Réservé"),
-            ('in_transit', "En transit"),
-            ('available_pickup', "Disponible au retrait"),
-            ('assigned', "Attribué"),
-            ('delivered', "Remis"),
+            ('operational', "En service"),
             ('after_sales', "SAV"),
-            ('repair', "Réparation"),
+            ('repair', "En réparation"),
             ('lost', "Perdu"),
             ('out_of_order', "Hors service"),
-            ('scrapped', "Mis au rebut"),
         ],
-        string="État du cycle de vie", default='new', required=True, tracking=True, index=True)
+        string="État de l'équipement", default='operational', required=True,
+        tracking=True, index=True,
+        help="État constaté de l'équipement, indépendant de sa position en "
+             "stock. Un équipement perdu ou hors service ne compte plus dans "
+             "le plafond de son bénéficiaire.")
+    in_circulation = fields.Boolean(
+        string="En circulation", compute='_compute_in_circulation', store=True,
+        help="Faux dès que l'équipement sort du dispositif : perdu, hors "
+             "service, ou mis au rebut.")
 
     # --- Dates et garantie (§12, §33) ---------------------------------------
     acquisition_date = fields.Date(string="Date d'acquisition")
@@ -74,12 +79,16 @@ class StockLot(models.Model):
         string="Garantie active", compute='_compute_warranty_active', store=True,
         help="Vrai tant que la date du jour est comprise dans la période de garantie.")
 
-    # --- Affectation (§12, §22) ---------------------------------------------
+    # --- Détention (§22) -----------------------------------------------------
+    # Odoo expose déjà `last_delivery_partner_id`, mais il est calculé à la
+    # volée : impossible de filtrer ni de regrouper dessus. Le détenteur est
+    # donc stocké — et posé par la validation du transfert, jamais saisi à la
+    # main, pour qu'il ne puisse pas contredire les mouvements de stock.
+    # Il n'est pas calculé : `delivery_ids` étant lui-même un champ calculé
+    # non stocké, aucune dépendance ne peut s'y accrocher.
     beneficiary_id = fields.Many2one(
-        'res.partner', string="Bénéficiaire", copy=False, index=True, tracking=True)
-    current_site_id = fields.Many2one('stock.warehouse', string="Site actuel", index=True)
-    current_location_id = fields.Many2one('stock.location', string="Emplacement actuel")
-    marking_type_id = fields.Many2one('ansut.equipment.marking', string="Type de marquage")
+        'res.partner', string="Bénéficiaire", index=True, tracking=True,
+        readonly=True, copy=False)
 
     _sql_constraints = [
         ('equipment_uid_uniq', 'unique(equipment_uid)',
@@ -94,6 +103,11 @@ class StockLot(models.Model):
             debut, fin = lot.warranty_start, lot.warranty_end
             lot.warranty_active = bool(fin and fin >= today and (not debut or debut <= today))
 
+    @api.depends('ansut_condition')
+    def _compute_in_circulation(self):
+        for lot in self:
+            lot.in_circulation = lot.ansut_condition not in ('lost', 'out_of_order')
+
     # --- Contraintes ---------------------------------------------------------
     @api.constrains('warranty_start', 'warranty_end')
     def _check_warranty_period(self):
@@ -102,15 +116,6 @@ class StockLot(models.Model):
                 raise ValidationError(
                     _("La fin de garantie ne peut pas précéder son début."))
 
-    @api.constrains('lifecycle_state', 'beneficiary_id')
-    def _check_beneficiary_required(self):
-        """RG-003 : un équipement attribué ou remis désigne son bénéficiaire."""
-        for lot in self:
-            if lot.lifecycle_state in ('assigned', 'delivered') and not lot.beneficiary_id:
-                raise ValidationError(_(
-                    "RG-003 : un équipement %s doit désigner son bénéficiaire.",
-                    dict(self._fields['lifecycle_state'].selection)[lot.lifecycle_state]))
-
     # --- Création ------------------------------------------------------------
     @api.model_create_multi
     def create(self, vals_list):
@@ -118,13 +123,4 @@ class StockLot(models.Model):
             if not vals.get('equipment_uid'):
                 vals['equipment_uid'] = self.env['ir.sequence'].next_by_code(
                     'ansut.equipment.uid') or f"ANSUT-{secrets.token_hex(4).upper()}"
-            if not vals.get('qr_token'):
-                # Jeton opaque, non prédictible et révocable (§23).
-                vals['qr_token'] = secrets.token_urlsafe(24)
         return super().create(vals_list)
-
-    def action_revoke_qr_token(self):
-        """Révoque le QR : le jeton précédent devient invalide (§23)."""
-        for lot in self:
-            lot.qr_token = secrets.token_urlsafe(24)
-        return True

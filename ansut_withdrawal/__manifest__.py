@@ -11,7 +11,7 @@
         'report/ansut_withdrawal_report.xml',
         'report/ansut_withdrawal_report_templates.xml',
         'wizard/ansut_withdrawal_wizard_views.xml',
-        'views/ansut_distribution_views.xml',
+        'views/stock_picking_views.xml',
     ],
     'installable': True,
     'application': False,

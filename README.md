@@ -21,19 +21,52 @@ unitaire, multi-sites, distribution contrôlée aux bénéficiaires, SAV, API.
 | `ansut_api` · `ansut_webhook` | API versionnée et webhooks (§38–§41) | À faire |
 | `ansut_audit` · `ansut_reporting` | Journal d'audit et reporting (§45–§48) | À faire |
 
+## Principe : si Odoo l'a, on ne le refait pas
+
+Odoo Stock — et davantage encore en Enterprise — couvre déjà l'essentiel d'une
+gestion de parc. Chaque champ de ces modules a donc dû justifier son existence
+contre le standard. Ce qui a été **retiré** après vérification dans la source
+d'Odoo 17 :
+
+| Ce que j'avais écrit | Ce qu'Odoo faisait déjà |
+|---|---|
+| Modèle `ansut.distribution` | `stock.picking` : état, destinataire, dates, origine, destination, réservation, mouvements de stock, reliquats, traçabilité |
+| Règle « un équipement engagé une seule fois » | La réservation standard (`_action_assign`) |
+| `delivery_signature` | `stock.picking.signature` |
+| `serial_number` | `stock.lot.name` |
+| `current_site_id`, `current_location_id` | `stock.lot.location_id`, `quant_ids` |
+| 9 des 13 états du cycle de vie | Position déduite des quants et des transferts |
+
+Le modèle maison ne se contentait pas de redire le standard : **il ne bougeait
+jamais le stock**. Un équipement « remis » restait en stock aux yeux d'Odoo,
+faussant inventaire, valorisation et traçabilité. Le retrait est désormais un
+transfert Odoo à part entière, et sa validation passe par `button_validate()`.
+
+Ce qu'Odoo n'a pas, et que ces modules construisent :
+
+- l'authentification au comptoir d'un bénéficiaire qui **n'est pas un
+  utilisateur Odoo**, par QR et PIN indépendants ;
+- la qualification, l'éligibilité et le plafond d'équipements d'un
+  bénéficiaire ;
+- l'identifiant ANSUT, l'IMEI, le marquage physique et la garantie d'un
+  équipement, et son état hors circuit logistique (SAV, perdu, hors service) ;
+- le PV de remise et ses mentions.
+
 ## Ce que couvre `ansut_equipment`
 
 Extension de `stock.lot`, conformément à la matrice §74 qui classe la
 sérialisation en standard Odoo avec extension.
 
-- les 15 champs du §12 : identifiant ANSUT, IMEI, référence constructeur,
-  numéro d'immobilisation, jeton QR, dates, garantie, bénéficiaire, site ;
-- le cycle de vie à 13 états du §14, branches SAV et rebut comprises ;
+- les champs du §12 qu'Odoo n'a pas : identifiant ANSUT, IMEI, référence
+  constructeur, numéro d'immobilisation, type de marquage ;
+- l'état du §14 **hors circuit logistique** — en service, SAV, en réparation,
+  perdu, hors service. La position (en stock, réservé, en transit, livré) est
+  celle qu'Odoo calcule : elle n'est pas recopiée dans un champ maison qui
+  dériverait au premier mouvement fait hors de nos écrans ;
 - la garantie calculée du §33 (`warranty_active`) ;
-- le jeton QR du §23 : opaque, non prédictible, révocable, sans donnée
-  personnelle ;
-- trois règles critiques du §71 — RG-001 (identifiant unique, contrainte SQL),
-  RG-003 (pas d'attribution sans bénéficiaire), cohérence des dates de
+- le détenteur courant, stocké pour être filtrable — mais **posé par la
+  validation du transfert**, jamais saisi à la main ;
+- RG-001 (identifiant unique, contrainte SQL) et la cohérence des dates de
   garantie.
 
 ## Ce que couvre `ansut_theme`
@@ -60,11 +93,11 @@ contacts et les communications standard d'Odoo.
   entrées de départ ajustables par le métier ;
 - statut d'éligibilité à quatre états — à vérifier, vérifié, suspendu, sorti
   du dispositif — la vérification exigeant une pièce d'identité ;
-- deux règles opposables à la distribution : **RG-009** (seul un bénéficiaire
-  vérifié reçoit un équipement) et **RG-010** (plafond de la catégorie), le
-  décompte ignorant les équipements rebutés, perdus ou hors service ;
-- un motif de non-éligibilité lisible, affiché en bandeau sur la fiche
-  contact comme sur la distribution.
+- deux règles opposables au retrait : **RG-009** (seul un bénéficiaire vérifié
+  reçoit un équipement) et **RG-010** (plafond de la catégorie), le décompte
+  ignorant les équipements perdus ou hors service ;
+- un motif de non-éligibilité lisible, affiché en bandeau sur la fiche contact
+  comme sur le transfert.
 
 ## Ce que couvre `ansut_withdrawal`
 
@@ -76,10 +109,10 @@ scanner le QR, saisir le PIN, contrôler l'identité, remettre l'équipement.
 - la résolution du QR ne distingue jamais « jeton inconnu » de « retrait déjà
   clôturé », pour ne pas faire du point de retrait un oracle à jetons ; elle
   refuse aussi les retraits expirés ;
-- les preuves (pièce présentée, photo, signature) sont écrites sur la
-  distribution, qui reste l'enregistrement d'audit, jamais sur l'assistant ;
+- les preuves vont sur le transfert, qui est l'enregistrement d'audit, et la
+  validation passe par `button_validate()` : le stock sort réellement ;
 - le **PV de remise** du §29 : référence, bénéficiaire, pièce présentée,
-  équipement avec IMEI et garantie, photo, signatures. Il ne s'édite qu'après
+  équipements avec IMEI et garantie, photo, signatures. Il ne s'édite qu'après
   la remise effective.
 
 ## Démarrer une instance locale
@@ -89,6 +122,11 @@ docker compose up -d
 docker compose run --rm odoo odoo -d ansut \
   -i ansut_theme,ansut_equipment,ansut_beneficiary,ansut_distribution,ansut_withdrawal \
   --stop-after-init
+
+# Les tests des modules, sur la même instance
+docker compose run --rm odoo odoo -d ansut \
+  -u ansut_beneficiary,ansut_withdrawal --test-enable \
+  --test-tags /ansut_beneficiary,/ansut_withdrawal --stop-after-init
 ```
 
 Puis <http://localhost:8069>, avec `admin` / `admin`.

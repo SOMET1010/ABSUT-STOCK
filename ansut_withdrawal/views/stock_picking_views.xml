@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="stock_picking_view_form_withdrawal_report" model="ir.ui.view">
+        <field name="name">stock.picking.form.ansut.pv</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="ansut_distribution.stock_picking_view_form_ansut"/>
+        <field name="arch" type="xml">
+            <header position="inside">
+                <button name="action_print_withdrawal_report" type="object"
+                        string="PV de remise"
+                        invisible="not is_ansut_withdrawal or state != 'done'"/>
+            </header>
+        </field>
+    </record>
+
+</odoo>

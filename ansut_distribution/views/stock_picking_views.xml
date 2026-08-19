@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="stock_picking_view_form_ansut" model="ir.ui.view">
+        <field name="name">stock.picking.form.ansut.withdrawal</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+
+            <header position="inside">
+                <field name="is_ansut_withdrawal" invisible="1"/>
+                <field name="withdrawal_state" invisible="1"/>
+                <button name="action_issue_secrets" type="object"
+                        string="Générer QR et PIN" class="btn-secondary"
+                        invisible="not is_ansut_withdrawal or state in ('done', 'cancel')"/>
+                <button name="action_revoke_secrets" type="object"
+                        string="Révoquer QR et PIN"
+                        invisible="not is_ansut_withdrawal or withdrawal_state == 'pending'"/>
+            </header>
+
+            <xpath expr="//sheet" position="inside">
+                <field name="beneficiary_eligible" invisible="1"/>
+                <div class="alert alert-warning" role="alert"
+                     invisible="not is_ansut_withdrawal or not partner_id or beneficiary_eligible">
+                    <field name="beneficiary_eligibility_blocker" nolabel="1" readonly="1"/>
+                </div>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Retrait ANSUT" name="ansut_withdrawal"
+                      invisible="not is_ansut_withdrawal">
+                    <group>
+                        <group string="Procédure">
+                            <field name="withdrawal_state" readonly="1"/>
+                            <field name="withdrawal_expiration" readonly="1"/>
+                            <field name="pin_attempts" readonly="1"/>
+                            <field name="pin_blocked" readonly="1"/>
+                        </group>
+                        <group string="Contrôle d'identité">
+                            <field name="identity_document_type"/>
+                            <field name="identity_document_number"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Photo de l'équipement remis">
+                            <field name="delivery_photo" widget="image" nolabel="1"/>
+                        </group>
+                        <group string="Équipements engagés">
+                            <field name="ansut_equipment_ids" nolabel="1" readonly="1">
+                                <tree>
+                                    <field name="equipment_uid"/>
+                                    <field name="name"/>
+                                    <field name="imei"/>
+                                    <field name="ansut_condition"/>
+                                </tree>
+                            </field>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="stock_picking_view_search_ansut" model="ir.ui.view">
+        <field name="name">stock.picking.search.ansut.withdrawal</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_internal_search"/>
+        <field name="arch" type="xml">
+            <search position="inside">
+                <separator/>
+                <filter name="ansut_withdrawal" string="Retraits ANSUT"
+                        domain="[('is_ansut_withdrawal', '=', True)]"/>
+                <filter name="ansut_pin_blocked" string="PIN bloqué"
+                        domain="[('pin_blocked', '=', True)]"/>
+                <filter name="ansut_awaiting_pickup" string="En attente de retrait"
+                        domain="[('is_ansut_withdrawal', '=', True),
+                                 ('withdrawal_state', 'in', ['secrets_issued', 'notified'])]"/>
+                <group expand="0" string="Regrouper par">
+                    <filter name="group_withdrawal_state" string="Étape du retrait"
+                            context="{'group_by': 'withdrawal_state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_ansut_withdrawal_picking" model="ir.actions.act_window">
+        <field name="name">Retraits bénéficiaires</field>
+        <field name="res_model">stock.picking</field>
+        <field name="view_mode">tree,kanban,form</field>
+        <field name="domain">[('is_ansut_withdrawal', '=', True)]</field>
+        <field name="context">
+            {'default_picking_type_id': ref('ansut_distribution.picking_type_ansut_withdrawal')}
+        </field>
+    </record>
+
+    <menuitem id="menu_ansut_withdrawal_picking"
+              name="Retraits"
+              parent="ansut_equipment.menu_ansut_equipment_root"
+              action="action_ansut_withdrawal_picking"
+              sequence="15"/>
+
+    <record id="stock_picking_type_view_form_ansut" model="ir.ui.view">
+        <field name="name">stock.picking.type.form.ansut</field>
+        <field name="model">stock.picking.type</field>
+        <field name="inherit_id" ref="stock.view_picking_type_form"/>
+        <field name="arch" type="xml">
+            <field name="code" position="after">
+                <field name="is_ansut_withdrawal"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

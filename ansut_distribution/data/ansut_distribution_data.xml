@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Le retrait est un type d'opération sortante : il hérite ainsi de la
+         réservation, des mouvements de stock et de la traçabilité standard. -->
+    <record id="picking_type_ansut_withdrawal" model="stock.picking.type">
+        <field name="name">Retrait bénéficiaire</field>
+        <field name="sequence_code">RET</field>
+        <field name="code">outgoing</field>
+        <field name="is_ansut_withdrawal" eval="True"/>
+        <field name="warehouse_id" ref="stock.warehouse0"/>
+        <field name="default_location_src_id" ref="stock.stock_location_stock"/>
+        <field name="default_location_dest_id" ref="stock.stock_location_customers"/>
+    </record>
+
+</odoo>

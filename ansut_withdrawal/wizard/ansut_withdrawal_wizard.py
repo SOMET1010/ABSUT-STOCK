@@ -4,7 +4,7 @@
 Le parcours suit quatre temps, dans cet ordre et sans raccourci possible :
 scanner le QR, saisir le PIN, contrôler l'identité, remettre l'équipement.
 L'assistant est transitoire : ni le PIN ni les données d'identité n'y
-survivent à la session. Les preuves, elles, sont écrites sur la distribution,
+survivent à la session. Les preuves, elles, sont écrites sur le transfert,
 qui est l'enregistrement d'audit.
 """
 from odoo import _, api, fields, models
@@ -30,24 +30,30 @@ class AnsutWithdrawalWizard(models.TransientModel):
     qr_token = fields.Char(
         string="QR code",
         help="Champ alimenté par la douchette ou le lecteur de la tablette.")
-    distribution_id = fields.Many2one(
-        'ansut.distribution', string="Retrait", readonly=True)
+    picking_id = fields.Many2one(
+        'stock.picking', string="Retrait", readonly=True)
 
     beneficiary_id = fields.Many2one(
-        related='distribution_id.beneficiary_id', string="Bénéficiaire", readonly=True)
-    equipment_id = fields.Many2one(
-        related='distribution_id.equipment_id', string="Équipement", readonly=True)
-    reference = fields.Char(related='distribution_id.reference', string="Référence", readonly=True)
+        related='picking_id.partner_id', string="Bénéficiaire", readonly=True)
+    equipment_ids = fields.Many2many(
+        related='picking_id.ansut_equipment_ids', string="Équipements", readonly=True)
+    reference = fields.Char(related='picking_id.name', string="Référence", readonly=True)
     expiration_date = fields.Datetime(
-        related='distribution_id.expiration_date', string="Expiration", readonly=True)
+        related='picking_id.withdrawal_expiration', string="Expiration", readonly=True)
 
     # --- Étape 2 : PIN (§24) -------------------------------------------------
     # Le PIN n'est ni stocké ni journalisé : il ne vit que le temps de l'appel.
     pin = fields.Char(string="PIN à 6 chiffres")
     pin_attempts_left = fields.Integer(
         string="Tentatives restantes", compute='_compute_pin_attempts_left')
+    pin_error = fields.Char(
+        string="Erreur de saisie", readonly=True,
+        help="Un PIN faux est signalé ici et non par une erreur : une erreur "
+             "annulerait la transaction, et le compteur de tentatives avec elle.")
 
     # --- Étape 3 : contrôle et preuves (§26, §27) ----------------------------
+    # Les preuves sont saisies ici puis reportées sur le transfert, qui reste
+    # l'enregistrement d'audit.
     identity_document_type = fields.Selection(
         selection=[('cni', "CNI"), ('passport', "Passeport"),
                    ('permis', "Permis de conduire"),
@@ -58,20 +64,20 @@ class AnsutWithdrawalWizard(models.TransientModel):
     delivery_signature = fields.Image(string="Signature du bénéficiaire", max_width=1024)
 
     # --- Calculs -------------------------------------------------------------
-    @api.depends('distribution_id.pin_attempts')
+    @api.depends('picking_id.pin_attempts')
     def _compute_pin_attempts_left(self):
-        maximum = self.env['ansut.distribution']._pin_attempts_max()
+        maximum = self.env['stock.picking']._pin_attempts_max()
         for assistant in self:
-            engagees = assistant.distribution_id.pin_attempts or 0
+            engagees = assistant.picking_id.pin_attempts or 0
             assistant.pin_attempts_left = max(maximum - engagees, 0)
 
     # --- Étape 1 -------------------------------------------------------------
     def action_scan(self):
         """Résout le QR présenté et passe à la saisie du PIN (§25)."""
         self.ensure_one()
-        distribution = self.env['ansut.distribution'].find_by_qr_token(self.qr_token)
+        picking = self.env['stock.picking'].find_by_qr_token(self.qr_token)
         self.write({
-            'distribution_id': distribution.id,
+            'picking_id': picking.id,
             # Le jeton lu ne reste pas dans l'assistant une fois résolu.
             'qr_token': False,
             'step': 'pin',
@@ -80,13 +86,22 @@ class AnsutWithdrawalWizard(models.TransientModel):
 
     # --- Étape 2 -------------------------------------------------------------
     def action_verify_pin(self):
-        """Vérifie le PIN saisi ; l'échec est compté par la distribution (§24)."""
+        """Vérifie le PIN saisi ; l'échec est compté par le transfert (§24)."""
         self.ensure_one()
-        if not self.distribution_id:
+        if not self.picking_id:
             raise UserError(_("Scannez d'abord le QR code du bénéficiaire."))
-        self.distribution_id.verify_pin(self.pin)
+
+        if not self.picking_id.verify_pin(self.pin):
+            restantes = self.picking_id.pin_attempts_left()
+            self.write({
+                'pin': False,
+                'pin_error': _("PIN incorrect. %s tentative(s) restante(s).", restantes),
+            })
+            return self._reopen()
+
         self.write({
             'pin': False,
+            'pin_error': False,
             'step': 'check',
             'identity_document_type': self.beneficiary_id.identity_document_type,
         })
@@ -94,22 +109,26 @@ class AnsutWithdrawalWizard(models.TransientModel):
 
     # --- Étape 3 -------------------------------------------------------------
     def action_deliver(self):
-        """Reporte les preuves sur la distribution et valide la remise (§28)."""
+        """Reporte les preuves sur le transfert et valide la remise (§28)."""
         self.ensure_one()
-        if not self.distribution_id:
+        if not self.picking_id:
             raise UserError(_("Scannez d'abord le QR code du bénéficiaire."))
         if not self.identity_document_number:
             raise UserError(_("Relevez le numéro de la pièce présentée (§26)."))
         if not self.delivery_signature:
             raise UserError(_("La signature du bénéficiaire est requise (§26)."))
 
-        self.distribution_id.write({
+        self.picking_id.write({
             'identity_document_type': self.identity_document_type,
             'identity_document_number': self.identity_document_number,
             'delivery_photo': self.delivery_photo,
-            'delivery_signature': self.delivery_signature,
+            # `signature` est le champ standard du transfert : on n'en ouvre
+            # pas un second.
+            'signature': self.delivery_signature,
         })
-        self.distribution_id.action_deliver()
+        # La sortie de stock, la traçabilité et le reliquat éventuel restent
+        # l'affaire d'Odoo.
+        self.picking_id.button_validate()
         self.write({'step': 'done'})
         return self._reopen()
 
@@ -117,7 +136,7 @@ class AnsutWithdrawalWizard(models.TransientModel):
     def action_print_report(self):
         """Édite le PV de remise du retrait qui vient d'être clôturé (§29)."""
         self.ensure_one()
-        return self.distribution_id.action_print_withdrawal_report()
+        return self.picking_id.action_print_withdrawal_report()
 
     def action_next_beneficiary(self):
         """Réarme l'écran pour le bénéficiaire suivant, sans rien conserver."""

@@ -23,10 +23,13 @@
                         <field name="marking_type_id"/>
                     </group>
                     <group>
-                        <field name="lifecycle_state"/>
-                        <field name="beneficiary_id"/>
-                        <field name="current_site_id"/>
-                        <field name="current_location_id"/>
+                        <field name="ansut_condition"/>
+                        <field name="in_circulation" invisible="1"/>
+                        <!-- Détenteur et emplacement sont dérivés des
+                             mouvements de stock : ils se lisent, ils ne se
+                             saisissent pas. -->
+                        <field name="beneficiary_id" readonly="1"/>
+                        <field name="location_id" readonly="1"/>
                     </group>
                 </group>
                 <group string="Garantie">
@@ -53,9 +56,9 @@
                 <field name="name" string="Numéro de série"/>
                 <field name="product_id"/>
                 <field name="imei" optional="show"/>
-                <field name="lifecycle_state" widget="badge"/>
+                <field name="ansut_condition" widget="badge"/>
                 <field name="beneficiary_id" optional="show"/>
-                <field name="current_site_id" optional="show"/>
+                <field name="location_id" optional="show"/>
                 <field name="warranty_active" optional="hide"/>
             </tree>
         </field>
@@ -70,12 +73,14 @@
                 <field name="name" string="Numéro de série"/>
                 <field name="imei"/>
                 <field name="beneficiary_id"/>
-                <filter name="en_stock" string="En stock" domain="[('lifecycle_state','=','in_stock')]"/>
-                <filter name="sav" string="En SAV" domain="[('lifecycle_state','=','after_sales')]"/>
+                <filter name="en_stock" string="Disponible en stock" domain="[('product_qty','&gt;',0)]"/>
+                <filter name="sav" string="En SAV" domain="[('ansut_condition','=','after_sales')]"/>
+                <filter name="hors_circulation" string="Hors circulation" domain="[('in_circulation','=',False)]"/>
                 <filter name="garantie" string="Sous garantie" domain="[('warranty_active','=',True)]"/>
                 <group expand="0" string="Regrouper par">
-                    <filter name="group_state" string="Cycle de vie" context="{'group_by': 'lifecycle_state'}"/>
-                    <filter name="group_site" string="Site" context="{'group_by': 'current_site_id'}"/>
+                    <filter name="group_state" string="État de l'équipement" context="{'group_by': 'ansut_condition'}"/>
+                    <filter name="group_location" string="Emplacement" context="{'group_by': 'location_id'}"/>
+                    <filter name="group_beneficiary" string="Bénéficiaire" context="{'group_by': 'beneficiary_id'}"/>
                 </group>
             </search>
         </field>

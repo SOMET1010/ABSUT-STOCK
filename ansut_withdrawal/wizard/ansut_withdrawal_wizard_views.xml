@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <form string="Point de retrait">
                 <field name="step" invisible="1"/>
-                <field name="distribution_id" invisible="1"/>
+                <field name="picking_id" invisible="1"/>
 
                 <!-- Étape 1 : le QR (§25) -->
                 <div invisible="step != 'scan'" class="text-center">
@@ -28,7 +28,7 @@
                         <field name="beneficiary_id"/>
                     </group>
                     <group>
-                        <field name="equipment_id"/>
+                        <field name="equipment_ids" widget="many2many_tags"/>
                         <field name="expiration_date" invisible="step == 'done'"/>
                     </group>
                 </group>
@@ -40,6 +40,9 @@
                         <field name="pin" password="True" placeholder="6 chiffres"/>
                         <field name="pin_attempts_left"/>
                     </group>
+                    <div class="alert alert-danger" role="alert" invisible="not pin_error">
+                        <field name="pin_error" nolabel="1" readonly="1"/>
+                    </div>
                     <div class="alert alert-info" role="alert">
                         Le PIN est connu du seul bénéficiaire. Ne le saisissez jamais à sa place.
                     </div>

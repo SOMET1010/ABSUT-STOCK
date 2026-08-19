@@ -3,12 +3,12 @@
 
     <record id="action_report_withdrawal" model="ir.actions.report">
         <field name="name">PV de remise</field>
-        <field name="model">ansut.distribution</field>
+        <field name="model">stock.picking</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">ansut_withdrawal.report_withdrawal</field>
         <field name="report_file">ansut_withdrawal.report_withdrawal</field>
-        <field name="print_report_name">"PV-%s" % (object.reference or "")</field>
-        <field name="binding_model_id" ref="ansut_distribution.model_ansut_distribution"/>
+        <field name="print_report_name">"PV-%s" % (object.name or "")</field>
+        <field name="binding_model_id" ref="stock.model_stock_picking"/>
         <field name="binding_type">report</field>
     </record>
 

@@ -53,7 +53,7 @@ class ResPartner(models.Model):
     ansut_equipment_ids = fields.One2many(
         'stock.lot', 'beneficiary_id', string="Équipements détenus")
     ansut_equipment_count = fields.Integer(
-        string="Équipements détenus", compute='_compute_ansut_equipment_count')
+        string="Nombre d'équipements détenus", compute='_compute_ansut_equipment_count')
     eligible = fields.Boolean(
         string="Éligible à une attribution", compute='_compute_eligible',
         help="Vrai si le contact est un bénéficiaire vérifié, sous son plafond "
@@ -67,12 +67,11 @@ class ResPartner(models.Model):
     ]
 
     # --- Calculs -------------------------------------------------------------
-    @api.depends('ansut_equipment_ids')
+    @api.depends('ansut_equipment_ids.in_circulation')
     def _compute_ansut_equipment_count(self):
         # Les équipements sortis du dispositif ne comptent plus dans le plafond.
         comptes = dict(self.env['stock.lot']._read_group(
-            [('beneficiary_id', 'in', self.ids),
-             ('lifecycle_state', 'not in', ('scrapped', 'lost', 'out_of_order'))],
+            [('beneficiary_id', 'in', self.ids), ('in_circulation', '=', True)],
             groupby=['beneficiary_id'], aggregates=['__count'],
         ))
         for partner in self:
