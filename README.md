@@ -158,6 +158,33 @@ docker compose run --rm odoo odoo -d ansut \
 
 Puis <http://localhost:8069>, avec `admin` / `admin`.
 
+## Tester en dix minutes
+
+Le module `ansut_demo` installe de quoi parcourir la chaîne sans rien saisir :
+huit tablettes sérialisées (dont deux hors garantie), cinq bénéficiaires
+couvrant les quatre statuts d'éligibilité, deux remises déjà servies et **un
+retrait prêt à être servi**.
+
+```bash
+docker compose up -d
+docker compose run --rm odoo odoo -d ansut \
+  -i ansut_theme,ansut_equipment,ansut_beneficiary,ansut_distribution,\
+ansut_withdrawal,ansut_demo --stop-after-init
+```
+
+Puis <http://localhost:8069>, `admin` / `admin`, application **ANSUT**.
+
+Le parcours à suivre, menu *Point de retrait* :
+
+1. le jeton QR du retrait prêt se lit dans le formulaire du retrait
+   `WH/RET/00004`, onglet *Retrait ANSUT* (champ réservé aux responsables) ;
+2. **PIN de démonstration : `123456`** ;
+3. saisissez un mauvais PIN d'abord — le compteur descend sans bloquer l'écran ;
+4. relevez une pièce d'identité, signez, validez : le stock sort réellement, et
+   le PV de remise s'édite.
+
+> `ansut_demo` pose un PIN connu. **Ne l'installez jamais en production.**
+
 ## Validé sur une instance réelle
 
 Les modules ne sont pas seulement analysés : ils sont installés et testés sur
@@ -168,7 +195,7 @@ Docker étant hors d'atteinte derrière la politique réseau).
 |---|---|---|
 | Installation | 4 modules ✅ | 5 modules ✅ |
 | Tests `ansut_beneficiary` | 11 ✅ | 11 ✅ |
-| Tests `ansut_withdrawal` | 18 ✅ | 18 ✅ |
+| Tests `ansut_withdrawal` | 19 ✅ | 19 ✅ |
 | Tests `ansut_sav` | — (exige Helpdesk) | 15 ✅ |
 
 La pile Enterprise testée comprend `helpdesk`, `helpdesk_stock`,

@@ -100,10 +100,19 @@ class StockPicking(models.Model):
     @api.constrains('partner_id', 'state', 'is_ansut_withdrawal')
     def _check_beneficiary_eligible(self):
         """RG-009 et RG-010 : on n'engage un équipement que vers un bénéficiaire
-        vérifié et sous son plafond. Le contrôle a lieu à la confirmation, pas
-        au brouillon, pour ne pas empêcher la préparation d'un dossier."""
+        vérifié et sous son plafond.
+
+        Le contrôle porte sur l'**engagement**, et seulement sur lui. Pas au
+        brouillon, pour ne pas empêcher la préparation d'un dossier ; et pas
+        une fois le retrait servi, sinon la règle se retourne contre lui : le
+        bénéficiaire est à son plafond *à cause* de cette remise, et le moindre
+        écrit ultérieur sur le transfert — jusqu'à une simple mise à jour de
+        module — deviendrait impossible.
+        """
         for picking in self:
-            if not picking.is_ansut_withdrawal or picking.state in ('draft', 'cancel'):
+            if not picking.is_ansut_withdrawal:
+                continue
+            if picking.state in ('draft', 'done', 'cancel'):
                 continue
             if not picking.partner_id:
                 raise ValidationError(_("Un retrait ANSUT désigne son bénéficiaire (§19)."))

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- noupdate : le jeu d'essai se pose à l'installation et jamais plus. Rejoué
+     à chaque mise à jour de module, il tenterait de resservir des équipements
+     déjà remis et ferait échouer la mise à jour. -->
+<odoo noupdate="1">
+
+    <!-- Le parcours de retrait suppose du stock réservé et un PIN connu :
+         cela se construit en Python, pas en XML. -->
+    <function model="ansut.demo.builder" name="build"/>
+
+</odoo>

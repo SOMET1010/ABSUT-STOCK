@@ -113,6 +113,32 @@ class TestWithdrawalFlow(TransactionCase):
         second.action_assign()
         self.assertNotIn(lot, second.move_ids.move_line_ids.lot_id)
 
+    def test_retrait_servi_reste_modifiable_au_plafond(self):
+        """La règle du plafond ne doit pas se retourner contre la remise.
+
+        Une fois servi, le bénéficiaire est à son plafond *à cause* de ce
+        retrait : revalider la contrainte le rendrait intouchable, jusqu'à
+        bloquer une mise à jour de module.
+        """
+        categorie = self.env['ansut.beneficiary.category'].create({
+            'name': "Plafond 1", 'code': 'TEST_PLAFOND', 'equipment_limit': 1,
+        })
+        self.beneficiaire.beneficiary_category_id = categorie
+
+        picking, _lot, assistant = self._jusqu_au_controle()
+        assistant.write({
+            'identity_document_number': 'CI-9999', 'delivery_signature': PIXEL,
+        })
+        assistant.action_deliver()
+        self.assertEqual(picking.state, 'done')
+
+        # Le bénéficiaire est désormais au plafond : le transfert doit rester
+        # modifiable malgré tout.
+        self.beneficiaire.invalidate_recordset()
+        self.assertFalse(self.beneficiaire.eligible)
+        picking.write({'origin': "Contrôle après remise"})
+        picking._check_beneficiary_eligible()
+
     # --- Étape 1 : le QR ------------------------------------------------------
     def test_qr_inconnu_refuse(self):
         assistant = self._assistant()

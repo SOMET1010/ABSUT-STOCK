@@ -88,9 +88,11 @@
         <field name="res_model">stock.picking</field>
         <field name="view_mode">tree,kanban,form</field>
         <field name="domain">[('is_ansut_withdrawal', '=', True)]</field>
-        <field name="context">
-            {'default_picking_type_id': ref('ansut_distribution.picking_type_ansut_withdrawal')}
-        </field>
+        <!-- `ref()` doit être résolu au chargement du module : laissé dans le
+             texte du champ, il serait évalué par le navigateur, qui ne le
+             connaît pas — l'action plantait à l'ouverture du menu. -->
+        <field name="context"
+               eval="{'default_picking_type_id': ref('ansut_distribution.picking_type_ansut_withdrawal')}"/>
     </record>
 
     <menuitem id="menu_ansut_withdrawal_picking"
