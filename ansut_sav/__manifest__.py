@@ -17,4 +17,8 @@
     ],
     'installable': True,
     'application': False,
+    # Odoo installe ce pont dès que toutes ses dépendances le sont : le SAV
+    # apparaît de lui-même sur une instance Enterprise avec Helpdesk, et reste
+    # absent d'une instance communautaire, sans rien casser.
+    'auto_install': True,
 }

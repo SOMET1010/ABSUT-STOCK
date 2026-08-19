@@ -10,6 +10,7 @@ unitaire, multi-sites, distribution contrôlée aux bénéficiaires, SAV, API.
 
 | Module | Objet | État |
 | --- | --- | --- |
+| `ansut_stock` | **Module chapeau** : installe toute la chaîne | **Livré** |
 | `ansut_equipment` | Référentiel équipement unitaire (DSD §11–§14, §23, §33) | **Livré** |
 | `ansut_core` | Socle commun, séquences, constantes | À faire |
 | `ansut_theme` | Design System ANSUT (§5–§8, §62) | **Livré** |
@@ -146,9 +147,8 @@ Ce que le standard ne sait pas, et qui est ajouté :
 
 ```bash
 docker compose up -d
-docker compose run --rm odoo odoo -d ansut \
-  -i ansut_theme,ansut_equipment,ansut_beneficiary,ansut_distribution,ansut_withdrawal \
-  --stop-after-init
+# Une seule ligne : ansut_stock entraîne toute la chaîne.
+docker compose run --rm odoo odoo -d ansut -i ansut_stock --stop-after-init
 
 # Les tests des modules, sur la même instance
 docker compose run --rm odoo odoo -d ansut \
@@ -167,9 +167,7 @@ retrait prêt à être servi**.
 
 ```bash
 docker compose up -d
-docker compose run --rm odoo odoo -d ansut \
-  -i ansut_theme,ansut_equipment,ansut_beneficiary,ansut_distribution,\
-ansut_withdrawal,ansut_demo --stop-after-init
+docker compose run --rm odoo odoo -d ansut -i ansut_stock,ansut_demo --stop-after-init
 ```
 
 Puis <http://localhost:8069>, `admin` / `admin`, application **ANSUT**.
