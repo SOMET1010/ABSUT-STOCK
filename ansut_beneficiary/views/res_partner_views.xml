@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_partner_view_form_beneficiary" model="ir.ui.view">
+        <field name="name">res.partner.form.ansut.beneficiary</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <div name="button_box" position="inside">
+                <button name="action_open_ansut_equipment" type="object"
+                        class="oe_stat_button" icon="fa-mobile"
+                        invisible="not is_ansut_beneficiary">
+                    <field name="ansut_equipment_count" widget="statinfo"
+                           string="Équipements"/>
+                </button>
+            </div>
+
+            <xpath expr="//sheet/notebook" position="before">
+                <field name="is_ansut_beneficiary" invisible="1"/>
+                <div class="alert alert-warning" role="alert"
+                     invisible="not is_ansut_beneficiary or eligible">
+                    <field name="eligibility_blocker" nolabel="1" readonly="1"/>
+                </div>
+            </xpath>
+
+            <xpath expr="//sheet/notebook" position="inside">
+                <page string="Bénéficiaire ANSUT" name="ansut_beneficiary">
+                    <group>
+                        <group string="Qualification">
+                            <field name="is_ansut_beneficiary"/>
+                            <field name="beneficiary_uid"
+                                   invisible="not beneficiary_uid"/>
+                            <field name="beneficiary_category_id"
+                                   required="is_ansut_beneficiary"
+                                   invisible="not is_ansut_beneficiary"/>
+                            <field name="beneficiary_state"
+                                   invisible="not is_ansut_beneficiary"/>
+                            <field name="eligible" invisible="1"/>
+                        </group>
+                        <group string="Pièce d'identité"
+                               invisible="not is_ansut_beneficiary">
+                            <field name="identity_document_type"/>
+                            <field name="identity_document_number"/>
+                        </group>
+                    </group>
+                    <div invisible="not is_ansut_beneficiary">
+                        <button name="action_verify_beneficiary" type="object"
+                                string="Vérifier le bénéficiaire" class="btn-primary"
+                                invisible="beneficiary_state == 'verified'"/>
+                        <button name="action_suspend_beneficiary" type="object"
+                                string="Suspendre"
+                                invisible="beneficiary_state != 'verified'"/>
+                        <button name="action_reset_beneficiary" type="object"
+                                string="Remettre à vérifier"
+                                invisible="beneficiary_state == 'draft'"/>
+                    </div>
+                    <field name="ansut_equipment_ids" readonly="1"
+                           invisible="not is_ansut_beneficiary">
+                        <tree string="Équipements détenus">
+                            <field name="equipment_uid"/>
+                            <field name="name"/>
+                            <field name="imei"/>
+                            <field name="lifecycle_state"/>
+                            <field name="warranty_end"/>
+                        </tree>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="res_partner_view_tree_beneficiary" model="ir.ui.view">
+        <field name="name">res.partner.tree.ansut.beneficiary</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <!-- Ajout en fin de vue : l'héritage ne dépend ainsi d'aucun nom
+                 de nœud interne à la vue standard, qui change d'une version
+                 d'Odoo à l'autre. -->
+            <tree position="inside">
+                <field name="beneficiary_uid" optional="show"/>
+                <field name="beneficiary_category_id" optional="show"/>
+                <field name="beneficiary_state" optional="show"/>
+                <field name="ansut_equipment_count" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="res_partner_view_search_beneficiary" model="ir.ui.view">
+        <field name="name">res.partner.search.ansut.beneficiary</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <search position="inside">
+                <separator/>
+                <filter name="ansut_beneficiary" string="Bénéficiaires ANSUT"
+                        domain="[('is_ansut_beneficiary', '=', True)]"/>
+                <filter name="ansut_verified" string="Vérifiés"
+                        domain="[('beneficiary_state', '=', 'verified')]"/>
+                <filter name="ansut_suspended" string="Suspendus"
+                        domain="[('beneficiary_state', '=', 'suspended')]"/>
+                <separator/>
+                <group expand="0" string="Regrouper par">
+                    <filter name="group_beneficiary_category" string="Catégorie de bénéficiaire"
+                            context="{'group_by': 'beneficiary_category_id'}"/>
+                    <filter name="group_beneficiary_state" string="Statut du bénéficiaire"
+                            context="{'group_by': 'beneficiary_state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

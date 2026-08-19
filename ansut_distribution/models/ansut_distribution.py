@@ -32,7 +32,12 @@ class AnsutDistribution(models.Model):
 
     # --- Parties prenantes (§19, §22) ---------------------------------------
     beneficiary_id = fields.Many2one(
-        'res.partner', string="Bénéficiaire", required=True, tracking=True, index=True)
+        'res.partner', string="Bénéficiaire", required=True, tracking=True, index=True,
+        domain="[('is_ansut_beneficiary', '=', True)]")
+    beneficiary_eligible = fields.Boolean(
+        related='beneficiary_id.eligible', string="Bénéficiaire éligible")
+    beneficiary_eligibility_blocker = fields.Char(
+        related='beneficiary_id.eligibility_blocker', string="Motif de non-éligibilité")
     equipment_id = fields.Many2one(
         'stock.lot', string="Équipement", required=True, tracking=True, index=True,
         domain="[('lifecycle_state', 'in', ['in_stock', 'reserved'])]")
@@ -114,6 +119,16 @@ class AnsutDistribution(models.Model):
                     "RG-003 : l'équipement « %s » fait déjà l'objet d'une autre "
                     "distribution en cours.", distribution.equipment_id.display_name))
 
+    @api.constrains('beneficiary_id', 'state')
+    def _check_beneficiary_eligible(self):
+        """RG-009 et RG-010 : on n'engage un équipement que vers un bénéficiaire
+        vérifié et sous son plafond. Le contrôle a lieu à l'engagement, pas au
+        brouillon, pour ne pas empêcher la préparation d'un dossier."""
+        for distribution in self:
+            if distribution.state in ('draft', 'cancelled'):
+                continue
+            distribution.beneficiary_id.check_eligibility()
+
     # --- Création ------------------------------------------------------------
     @api.model_create_multi
     def create(self, vals_list):
@@ -124,6 +139,11 @@ class AnsutDistribution(models.Model):
         return super().create(vals_list)
 
     # --- Secrets -------------------------------------------------------------
+    @api.model
+    def _pin_attempts_max(self):
+        """Nombre de tentatives autorisées, exposé aux écrans agent (§24)."""
+        return MAX_PIN_ATTEMPTS
+
     def _hash_pin(self, pin):
         """Empreinte du PIN, salée par la clé d'instance (§24)."""
         cle = self.env['ir.config_parameter'].sudo().get_param('database.secret', '')

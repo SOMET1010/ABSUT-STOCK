@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="ansut_withdrawal_wizard_view_form" model="ir.ui.view">
+        <field name="name">ansut.withdrawal.wizard.form</field>
+        <field name="model">ansut.withdrawal.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Point de retrait">
+                <field name="step" invisible="1"/>
+                <field name="distribution_id" invisible="1"/>
+
+                <!-- Étape 1 : le QR (§25) -->
+                <div invisible="step != 'scan'" class="text-center">
+                    <h2>Scanner le QR code</h2>
+                    <p class="text-muted">
+                        Présentez le QR code du bénéficiaire au lecteur, ou saisissez-le.
+                    </p>
+                    <group>
+                        <field name="qr_token" nolabel="1" placeholder="QR code du bénéficiaire"/>
+                    </group>
+                </div>
+
+                <!-- Rappel du retrait en cours, commun aux étapes 2 à 4 : un
+                     champ ne figure qu'une fois dans la vue. -->
+                <group invisible="step == 'scan'">
+                    <group>
+                        <field name="reference"/>
+                        <field name="beneficiary_id"/>
+                    </group>
+                    <group>
+                        <field name="equipment_id"/>
+                        <field name="expiration_date" invisible="step == 'done'"/>
+                    </group>
+                </group>
+
+                <!-- Étape 2 : le PIN (§24) -->
+                <div invisible="step != 'pin'">
+                    <h2>Saisir le PIN</h2>
+                    <group>
+                        <field name="pin" password="True" placeholder="6 chiffres"/>
+                        <field name="pin_attempts_left"/>
+                    </group>
+                    <div class="alert alert-info" role="alert">
+                        Le PIN est connu du seul bénéficiaire. Ne le saisissez jamais à sa place.
+                    </div>
+                </div>
+
+                <!-- Étape 3 : contrôle et preuves (§26 à §28) -->
+                <div invisible="step != 'check'">
+                    <h2>Contrôler l'identité et remettre</h2>
+                    <group string="Pièce présentée">
+                        <field name="identity_document_type"/>
+                        <field name="identity_document_number"/>
+                    </group>
+                    <group>
+                        <group string="Photo de l'équipement">
+                            <field name="delivery_photo" widget="image" nolabel="1"/>
+                        </group>
+                        <group string="Signature du bénéficiaire">
+                            <field name="delivery_signature" widget="image" nolabel="1"/>
+                        </group>
+                    </group>
+                </div>
+
+                <!-- Étape 4 : le PV (§29) -->
+                <div invisible="step != 'done'" class="text-center">
+                    <h2>Remise effectuée</h2>
+                    <p>
+                        Le retrait est clôturé. Éditez le PV de remise et remettez-en
+                        un exemplaire au bénéficiaire.
+                    </p>
+                </div>
+
+                <footer>
+                    <button name="action_scan" type="object" string="Valider le QR code"
+                            class="btn-primary" invisible="step != 'scan'"/>
+                    <button name="action_verify_pin" type="object" string="Vérifier le PIN"
+                            class="btn-primary" invisible="step != 'pin'"/>
+                    <button name="action_deliver" type="object" string="Valider la remise"
+                            class="btn-primary" invisible="step != 'check'"/>
+                    <button name="action_print_report" type="object" string="Éditer le PV de remise"
+                            class="btn-primary" invisible="step != 'done'"/>
+                    <button name="action_next_beneficiary" type="object" string="Bénéficiaire suivant"
+                            invisible="step != 'done'"/>
+                    <button string="Fermer" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ansut_withdrawal_wizard" model="ir.actions.act_window">
+        <field name="name">Point de retrait</field>
+        <field name="res_model">ansut.withdrawal.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_ansut_withdrawal"
+              name="Point de retrait"
+              parent="ansut_equipment.menu_ansut_equipment_root"
+              action="action_ansut_withdrawal_wizard"
+              sequence="20"/>
+
+</odoo>

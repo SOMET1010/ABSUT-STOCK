@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="ansut_beneficiary_category_view_tree" model="ir.ui.view">
+        <field name="name">ansut.beneficiary.category.tree</field>
+        <field name="model">ansut.beneficiary.category</field>
+        <field name="arch" type="xml">
+            <tree string="Catégories de bénéficiaires" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="equipment_limit"/>
+                <field name="active" widget="boolean_toggle"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="ansut_beneficiary_category_view_form" model="ir.ui.view">
+        <field name="name">ansut.beneficiary.category.form</field>
+        <field name="model">ansut.beneficiary.category</field>
+        <field name="arch" type="xml">
+            <form string="Catégorie de bénéficiaire">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Établissement scolaire"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="equipment_limit"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_ansut_beneficiary_category" model="ir.actions.act_window">
+        <field name="name">Catégories de bénéficiaires</field>
+        <field name="res_model">ansut.beneficiary.category</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="action_ansut_beneficiary" model="ir.actions.act_window">
+        <field name="name">Bénéficiaires</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,tree,form</field>
+        <field name="domain">[('is_ansut_beneficiary', '=', True)]</field>
+        <field name="context">{'default_is_ansut_beneficiary': True}</field>
+    </record>
+
+    <menuitem id="menu_ansut_beneficiary"
+              name="Bénéficiaires"
+              parent="ansut_equipment.menu_ansut_equipment_root"
+              action="action_ansut_beneficiary"
+              sequence="30"/>
+
+    <menuitem id="menu_ansut_beneficiary_category"
+              name="Catégories de bénéficiaires"
+              parent="ansut_equipment.menu_ansut_equipment_root"
+              action="action_ansut_beneficiary_category"
+              sequence="90"/>
+
+</odoo>

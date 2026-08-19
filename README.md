@@ -14,9 +14,9 @@ unitaire, multi-sites, distribution contrôlée aux bénéficiaires, SAV, API.
 | `ansut_core` | Socle commun, séquences, constantes | À faire |
 | `ansut_theme` | Design System ANSUT (§5–§8, §62) | **Livré** |
 | `ansut_dashboard` | Tableaux de bord OWL (§10) | À faire |
-| `ansut_beneficiary` | Bénéficiaires (§22) | À faire |
+| `ansut_beneficiary` | Bénéficiaires (§22) | **Livré** |
 | `ansut_distribution` | Distribution, QR et PIN (§19–§29) | **Livré** |
-| `ansut_withdrawal` | Point de retrait, remise, PV (§25–§29) | À faire |
+| `ansut_withdrawal` | Point de retrait, remise, PV (§25–§29) | **Livré** |
 | `ansut_sav` | SAV, garantie, échange standard (§30–§34) | À faire |
 | `ansut_api` · `ansut_webhook` | API versionnée et webhooks (§38–§41) | À faire |
 | `ansut_audit` · `ansut_reporting` | Journal d'audit et reporting (§45–§48) | À faire |
@@ -49,11 +49,46 @@ badges d'état, onglets, et un focus visible conforme au §63.
 
 Les valeurs sont dérivées des maquettes de référence validées.
 
+## Ce que couvre `ansut_beneficiary`
+
+Le bénéficiaire reste un `res.partner` étendu, pour garder les adresses, les
+contacts et les communications standard d'Odoo.
+
+- qualification explicite (`is_ansut_beneficiary`), identifiant unique attribué
+  à la qualification et non à la création du contact ;
+- catégories porteuses d'un **plafond d'équipements**, alimentées par cinq
+  entrées de départ ajustables par le métier ;
+- statut d'éligibilité à quatre états — à vérifier, vérifié, suspendu, sorti
+  du dispositif — la vérification exigeant une pièce d'identité ;
+- deux règles opposables à la distribution : **RG-009** (seul un bénéficiaire
+  vérifié reçoit un équipement) et **RG-010** (plafond de la catégorie), le
+  décompte ignorant les équipements rebutés, perdus ou hors service ;
+- un motif de non-éligibilité lisible, affiché en bandeau sur la fiche
+  contact comme sur la distribution.
+
+## Ce que couvre `ansut_withdrawal`
+
+L'écran agent du point de retrait, en quatre temps sans raccourci possible :
+scanner le QR, saisir le PIN, contrôler l'identité, remettre l'équipement.
+
+- l'assistant est transitoire : ni le PIN ni le jeton lu n'y survivent — le
+  jeton est effacé dès qu'il est résolu, le PIN dès qu'il est vérifié ;
+- la résolution du QR ne distingue jamais « jeton inconnu » de « retrait déjà
+  clôturé », pour ne pas faire du point de retrait un oracle à jetons ; elle
+  refuse aussi les retraits expirés ;
+- les preuves (pièce présentée, photo, signature) sont écrites sur la
+  distribution, qui reste l'enregistrement d'audit, jamais sur l'assistant ;
+- le **PV de remise** du §29 : référence, bénéficiaire, pièce présentée,
+  équipement avec IMEI et garantie, photo, signatures. Il ne s'édite qu'après
+  la remise effective.
+
 ## Démarrer une instance locale
 
 ```bash
 docker compose up -d
-docker compose run --rm odoo odoo -d ansut -i ansut_theme,ansut_equipment --stop-after-init
+docker compose run --rm odoo odoo -d ansut \
+  -i ansut_theme,ansut_equipment,ansut_beneficiary,ansut_distribution,ansut_withdrawal \
+  --stop-after-init
 ```
 
 Puis <http://localhost:8069>, avec `admin` / `admin`.

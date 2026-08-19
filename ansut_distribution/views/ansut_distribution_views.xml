@@ -26,6 +26,11 @@
                            statusbar_visible="draft,reserved,available,checking,closed"/>
                 </header>
                 <sheet>
+                    <field name="beneficiary_eligible" invisible="1"/>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not beneficiary_id or beneficiary_eligible">
+                        <field name="beneficiary_eligibility_blocker" nolabel="1" readonly="1"/>
+                    </div>
                     <div class="oe_title">
                         <h1><field name="reference" readonly="1"/></h1>
                     </div>

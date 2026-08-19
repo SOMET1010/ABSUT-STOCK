@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_withdrawal_document">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <h2 class="text-center">Procès-verbal de remise d'équipement</h2>
+                <p class="text-center text-muted">
+                    Agence Nationale du Service Universel des Télécommunications
+                </p>
+
+                <table class="table table-sm mt-4">
+                    <tr>
+                        <th style="width: 35%;">Référence du retrait</th>
+                        <td><span t-field="doc.reference"/></td>
+                    </tr>
+                    <tr>
+                        <th>Date de remise</th>
+                        <td><span t-field="doc.withdrawal_date"/></td>
+                    </tr>
+                    <tr>
+                        <th>Point de retrait</th>
+                        <td><span t-field="doc.pickup_point_id"/></td>
+                    </tr>
+                    <tr>
+                        <th>Agent ayant procédé à la remise</th>
+                        <td><span t-field="doc.agent_id"/></td>
+                    </tr>
+                </table>
+
+                <h4 class="mt-4">Bénéficiaire</h4>
+                <table class="table table-sm">
+                    <tr>
+                        <th style="width: 35%;">Nom</th>
+                        <td><span t-field="doc.beneficiary_id"/></td>
+                    </tr>
+                    <tr>
+                        <th>Pièce d'identité présentée</th>
+                        <td>
+                            <span t-field="doc.identity_document_type"/>
+                            <span t-if="doc.identity_document_number">
+                                n° <span t-field="doc.identity_document_number"/>
+                            </span>
+                        </td>
+                    </tr>
+                </table>
+
+                <h4 class="mt-4">Équipement remis</h4>
+                <table class="table table-sm">
+                    <tr>
+                        <th style="width: 35%;">Identifiant ANSUT</th>
+                        <td><span t-field="doc.equipment_id.equipment_uid"/></td>
+                    </tr>
+                    <tr>
+                        <th>Numéro de série</th>
+                        <td><span t-field="doc.equipment_id.name"/></td>
+                    </tr>
+                    <tr t-if="doc.equipment_id.imei">
+                        <th>IMEI</th>
+                        <td><span t-field="doc.equipment_id.imei"/></td>
+                    </tr>
+                    <tr t-if="doc.equipment_id.warranty_end">
+                        <th>Garantie jusqu'au</th>
+                        <td><span t-field="doc.equipment_id.warranty_end"/></td>
+                    </tr>
+                </table>
+
+                <div t-if="doc.delivery_photo" class="mt-3">
+                    <h4>Photo de l'équipement remis</h4>
+                    <img t-att-src="image_data_uri(doc.delivery_photo)"
+                         style="max-height: 180px;" alt="Photo de l'équipement remis"/>
+                </div>
+
+                <p class="mt-4">
+                    Le bénéficiaire reconnaît avoir reçu l'équipement désigné ci-dessus,
+                    en bon état de fonctionnement, et s'engage à en assurer la
+                    conservation. Tout changement de détenteur doit être déclaré à
+                    l'ANSUT.
+                </p>
+
+                <div class="row mt-5">
+                    <div class="col-6">
+                        <p><strong>Signature du bénéficiaire</strong></p>
+                        <img t-if="doc.delivery_signature"
+                             t-att-src="image_data_uri(doc.delivery_signature)"
+                             style="max-height: 100px;" alt="Signature du bénéficiaire"/>
+                        <div t-else="" style="height: 100px; border-bottom: 1px solid #000;"/>
+                    </div>
+                    <div class="col-6">
+                        <p><strong>Signature de l'agent</strong></p>
+                        <div style="height: 100px; border-bottom: 1px solid #000;"/>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_withdrawal">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="ansut_withdrawal.report_withdrawal_document"/>
+            </t>
+        </t>
+    </template>
+
+</odoo>

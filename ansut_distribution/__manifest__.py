@@ -5,7 +5,7 @@
     'summary': "Distribution aux bénéficiaires, QR et PIN de retrait (DSD §19 à §29)",
     'author': 'ANSUT',
     'license': 'LGPL-3',
-    'depends': ['ansut_equipment'],
+    'depends': ['ansut_equipment', 'ansut_beneficiary'],
     'data': [
         'security/ir.model.access.csv',
         'views/ansut_distribution_views.xml',

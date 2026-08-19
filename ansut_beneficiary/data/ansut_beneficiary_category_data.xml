@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="seq_ansut_beneficiary" model="ir.sequence">
+        <field name="name">Bénéficiaire ANSUT</field>
+        <field name="code">ansut.beneficiary</field>
+        <field name="prefix">BEN-%(year)s-</field>
+        <field name="padding">5</field>
+    </record>
+
+    <!-- Catégories de départ, ajustables par le métier. Le plafond zéro
+         signifie « sans plafond » : c'est le cas des structures. -->
+    <record id="category_school" model="ansut.beneficiary.category">
+        <field name="name">Établissement scolaire</field>
+        <field name="code">SCOLAIRE</field>
+        <field name="sequence">10</field>
+        <field name="equipment_limit">0</field>
+    </record>
+
+    <record id="category_health" model="ansut.beneficiary.category">
+        <field name="name">Centre de santé</field>
+        <field name="code">SANTE</field>
+        <field name="sequence">20</field>
+        <field name="equipment_limit">0</field>
+    </record>
+
+    <record id="category_administration" model="ansut.beneficiary.category">
+        <field name="name">Administration publique</field>
+        <field name="code">ADMIN</field>
+        <field name="sequence">30</field>
+        <field name="equipment_limit">0</field>
+    </record>
+
+    <record id="category_agent" model="ansut.beneficiary.category">
+        <field name="name">Agent ANSUT</field>
+        <field name="code">AGENT</field>
+        <field name="sequence">40</field>
+        <field name="equipment_limit">1</field>
+    </record>
+
+    <record id="category_individual" model="ansut.beneficiary.category">
+        <field name="name">Particulier</field>
+        <field name="code">PARTICULIER</field>
+        <field name="sequence">50</field>
+        <field name="equipment_limit">1</field>
+    </record>
+
+</odoo>
